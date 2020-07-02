@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import sys
+from importlib import import_module
 import traceback
 from django.conf import settings
 from django.http import JsonResponse
@@ -11,6 +12,8 @@ from .fields import UNDEF, BaseField
 api_methods = {}
 
 DEBUG = settings.DEBUG
+JR_API_DIR = settings.JR_API_DIR
+JR_API_FILE = settings.JR_API_FILE
 
 
 @csrf_exempt
@@ -40,6 +43,27 @@ def api_dispatch(request):
                              'error': {'code': -32600,
                                        'message': 'Invalid Request',
                                        'data': {'text': error_text}}})
+    if api_name not in api_methods:
+        try:
+            # example: api.echo.method
+            # file: api/echo/method.py
+            import_module('{}.{}.{}'.format(JR_API_DIR, api_name, JR_API_FILE))
+        except ModuleNotFoundError:
+            return JsonResponse({'jsonrpc': '2.0',
+                                 'id': request_id,
+                                 'error': {'code': -32601,
+                                           'message': 'Method not found'}})
+        except Exception:
+            jsonrpc_response = {'jsonrpc': '2.0', 'id': request_id}
+            error = {'code': -1, 'message': 'Internal error'}
+            stack = traceback.format_exc()
+            if DEBUG:
+                error['data'] = {
+                    'stack': stack,
+                    'executable': sys.executable}
+            logging.error('{}'.format(stack))
+            jsonrpc_response.update({'error': error})
+            return JsonResponse(jsonrpc_response)
     cls = api_methods.get(api_name)
     if not cls:
         return JsonResponse({'jsonrpc': '2.0',

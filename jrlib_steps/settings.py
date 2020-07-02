@@ -119,7 +119,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-import api.echo.method
-import api.set_obj_field.method
-import api.set_obj_field_inner.method
-import api.set_obj_field_required.method
+JR_API_DIR = 'api'
+JR_API_FILE = 'method'
