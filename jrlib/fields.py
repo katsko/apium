@@ -105,11 +105,17 @@ class MetaObjField(type):
 
 class ObjField(BaseField, metaclass=MetaObjField):
 
-    def __init__(self, required=False, nullable=True):
+    def __init__(self, required=False, nullable=True, fields=None):
         print('class objfield init')
         self.value = UNDEF
         self.required = required
         self.nullable = nullable
+
+        if isinstance(fields, dict):
+            for key, val in fields.items():
+                setattr(type(self), key, val)
+                if isinstance(val, BaseField):
+                    self._fields.append(key)
 
     def __set__(self, obj, value):
         self.value = value
