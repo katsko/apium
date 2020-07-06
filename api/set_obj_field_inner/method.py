@@ -1,39 +1,39 @@
 import jrlib
-from jrlib import fields
+from jrlib import jf
 
 
-class SubUserProfile(fields.ObjField):
+class SubUserProfile(jf.Obj):
 
-    class SubSub(fields.ObjField):
+    class SubSub(jf.Obj):
 
-        class PhoneField(fields.CharField):
+        class PhoneField(jf.Str):
             def validate(self):
                 if self.value and len(self.value) < 3:
                     raise ValueError(
                         'Phone is too short, required 3 or more symbols')
 
-        email = fields.CharField()
+        email = jf.Str()
         phone = PhoneField()
-        address = fields.CharField(required=True)
+        address = jf.Str(required=True)
 
         def validate(self):
             if not (self.email or self.phone):
                 raise ValueError('Required email or phone')
 
-    age = fields.IntField()
-    gender = fields.IntField(required=True)
+    age = jf.Int()
+    gender = jf.Int(required=True)
     card = SubSub(required=True)
 
 
-class UserProfile(fields.ObjField):
-    first_name = fields.CharField(required=True)
-    last_name = fields.CharField()
+class UserProfile(jf.Obj):
+    first_name = jf.Str(required=True)
+    last_name = jf.Str()
     sub = SubUserProfile(required=True)
     test = 'abc test'
 
 
 class SetObjFieldInner(jrlib.Method):
-    user_id = fields.IntField(required=True)
+    user_id = jf.Int(required=True)
     user_profile = UserProfile(required=True)
 
     def execute(self):

@@ -58,38 +58,38 @@ class Field(BaseField):
         pass
 
 
-class IntField(Field):
+class Int(Field):
     def validate(self):
         if not isinstance(self.value, int):
             raise TypeError('Expected int')
 
 
-class CharField(Field):
+class Str(Field):
     def validate(self):
         if not isinstance(self.value, str):
             raise TypeError('Expected str')
 
 
-class DictField(Field):
+class Dict(Field):
     def validate(self):
         if not isinstance(self.value, dict):
             raise TypeError('Expected dict (json)')
 
 
-class EmailField(CharField):
+class Email(Str):
     def validate(self):
-        super(EmailField, self).validate()
+        super(Email, self).validate()
         if '@' not in self.value:
             raise ValueError('Expected email')
 
 
-class DateField(CharField):
+class Date(Str):
     def validate(self):
-        super(DateField, self).validate()
+        super(Date, self).validate()
         self.value = datetime.strptime(self.value, '%Y-%m-%d')
 
 
-class ListField(Field):
+class List(Field):
     def validate(self):
         if not isinstance(self.value, list):
             raise ValueError('Expected list')
@@ -103,7 +103,7 @@ class MetaObjField(type):
         return cls
 
 
-class ObjField(BaseField, metaclass=MetaObjField):
+class Obj(BaseField, metaclass=MetaObjField):
 
     def __init__(self, required=False, nullable=True, fields=None):
         print('class objfield init')

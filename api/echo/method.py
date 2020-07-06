@@ -1,5 +1,5 @@
 import jrlib
-from jrlib import fields
+from jrlib import jf
 # from jrlib import middleware  # пока этого нет
 
 # TODO: можно добавлять декоратор, в котором параметр - это
@@ -11,7 +11,7 @@ from jrlib import fields
 # @middleware(Auth)
 
 class Echo(jrlib.Method):
-    msg = fields.CharField(required=True)
+    msg = jf.Str(required=True)
 
     def validate(self):
         print('11111111111')

@@ -1,15 +1,15 @@
 import jrlib
-from jrlib import fields
+from jrlib import jf
 
 
-class UserProfile(fields.ObjField):
-    first_name = fields.CharField(required=True)
-    # first_name = fields.CharField()
-    last_name = fields.CharField()
+class UserProfile(jf.Obj):
+    first_name = jf.Str(required=True)
+    # first_name = jf.Str()
+    last_name = jf.Str()
 
 
 class SetObjFieldRequired(jrlib.Method):
-    user_id = fields.IntField(required=True)
+    user_id = jf.Int(required=True)
     # user_profile = UserProfile(required=True)
     user_profile = UserProfile()
 
