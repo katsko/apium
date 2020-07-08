@@ -131,11 +131,10 @@ class Method(metaclass=MetaBase):
 
     def validate_fields(self):
         for key in self._fields:
-            validator_name = 'validate_{}'.format(key)
-            if validator_name in type(self).__dict__:
-                value = self.__getattribute__(key)
+            validator = getattr(self, 'validate_{}'.format(key), None)
+            if validator:
                 try:
-                    self.__getattribute__(validator_name)(value)
+                    validator(getattr(self, key))
                 except Exception as exc:
                     raise ValueError('{}: {}'.format(key, exc))
 
