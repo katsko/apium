@@ -17,8 +17,11 @@ class BaseField:
 
 
 class Field(BaseField):
-    def __init__(self, required=False, nullable=True):
+    def __init__(self, validators=None, required=False, nullable=True):
         self.value = UNDEF
+        # TODO: if validators isn't list - raise exception
+        # not raise ValueError, should new type for Internal Error
+        self.validators = validators if isinstance(validators, list) else []
         self.required = required
         self.nullable = nullable
 
@@ -51,6 +54,8 @@ class Field(BaseField):
         if self.value == UNDEF:
             self.value = None
         if self.value is not None:
+            for validator in self.validators:
+                validator(self.value)
             self.validate()
 
     def validate(self):
@@ -105,9 +110,13 @@ class MetaObjField(type):
 
 class Obj(BaseField, metaclass=MetaObjField):
 
-    def __init__(self, required=False, nullable=True, fields=None):
+    def __init__(self, validators=None, required=False, nullable=True,
+                 fields=None):
         print('class objfield init')
         self.value = UNDEF
+        # TODO: if validators isn't list - raise exception
+        # not raise ValueError, should new type for Internal Error
+        self.validators = validators if isinstance(validators, list) else []
         self.required = required
         self.nullable = nullable
 
@@ -146,6 +155,8 @@ class Obj(BaseField, metaclass=MetaObjField):
         if self.value == UNDEF:
             self.value = None
         if self.value is not None:
+            for validator in self.validators:
+                validator(self)
             self.validate()
 
     def validate(self):

@@ -119,6 +119,7 @@ class Method(metaclass=MetaBase):
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
         try:
+            self.validate_fields()
             self.validate()
         except Exception:
             raise
@@ -127,6 +128,16 @@ class Method(metaclass=MetaBase):
                 self.result = self.execute()
             except Exception:
                 raise
+
+    def validate_fields(self):
+        for key in self._fields:
+            validator_name = 'validate_{}'.format(key)
+            if validator_name in type(self).__dict__:
+                value = self.__getattribute__(key)
+                try:
+                    self.__getattribute__(validator_name)(value)
+                except Exception as exc:
+                    raise ValueError('{}: {}'.format(key, exc))
 
     def validate(self):
         pass
