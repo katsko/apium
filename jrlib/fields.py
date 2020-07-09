@@ -17,19 +17,24 @@ class BaseField:
 
 
 class Field(BaseField):
-    def __init__(self, validators=None, required=False, nullable=True):
+    def __init__(self, validators=None, required=False, nullable=True,
+                 default=UNDEF):
         self.value = UNDEF
         # TODO: if validators isn't list - raise exception
         # not raise ValueError, should new type for Internal Error
         self.validators = validators if isinstance(validators, list) else []
         self.required = required
         self.nullable = nullable
+        self.default = default
 
     def __get__(self, obj, cls):
         return self.value
 
     def __set__(self, obj, value):
         self.value = value
+        if self.value == UNDEF and self.default != UNDEF:
+            self.value = self.default()\
+                if callable(self.default) else self.default
         # self.value = self.to_python(self.value)
         self.value = self.clean()
         self._validate_first()
@@ -111,7 +116,7 @@ class MetaObjField(type):
 class Obj(BaseField, metaclass=MetaObjField):
 
     def __init__(self, validators=None, required=False, nullable=True,
-                 fields=None):
+                 default=UNDEF, fields=None):
         print('class objfield init')
         self.value = UNDEF
         # TODO: if validators isn't list - raise exception
@@ -119,6 +124,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.validators = validators if isinstance(validators, list) else []
         self.required = required
         self.nullable = nullable
+        self.default = default
 
         if isinstance(fields, dict):
             for key, val in fields.items():
@@ -128,6 +134,9 @@ class Obj(BaseField, metaclass=MetaObjField):
 
     def __set__(self, obj, value):
         self.value = value
+        if self.value == UNDEF and self.default != UNDEF:
+            self.value = self.default()\
+                if callable(self.default) else self.default
         self.value = self.clean()
 
         print('O F {}'.format(self._fields))
