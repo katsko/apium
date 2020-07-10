@@ -73,8 +73,13 @@ class Validators(jrlib.Method):
     )
 
     def execute(self):
+        print('up: {}'.format(self.user_profile))
         return {
             'user_id': self.user_id,
+            'age': self.age,
+            'user_profile': {
+                'first_name': self.user_profile.first_name
+            }
         }
 
     def validate(self):

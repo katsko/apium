@@ -140,13 +140,13 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.value = self.clean()
 
         print('O F {}'.format(self._fields))
-        if self.value != UNDEF:
-            for key in self._fields:
-                try:
-                    print('OBJF - {} : {}'.format(key, self.value.get(key)))
-                    setattr(self, key, self.value.get(key, UNDEF))
-                except Exception as exc:
-                    raise ValueError('{}: {}'.format(key, exc))
+        obj_value = {} if self.value == UNDEF else self.value
+        for key in self._fields:
+            try:
+                print('OBJF - {} : {}'.format(key, obj_value.get(key, UNDEF)))
+                setattr(self, key, obj_value.get(key, UNDEF))
+            except Exception as exc:
+                raise ValueError('{}: {}'.format(key, exc))
 
         self._validate_first()
 
