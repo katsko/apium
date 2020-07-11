@@ -12,11 +12,19 @@ class LastName(jf.Str):
 class UserProfile(jf.Obj):
     first_name = jf.Str(validators=[])
     last_name = LastName()
+    middle_name = jf.Str()
 
     def validate(self):
+        print('UserProfile Validate')
         super(UserProfile, self).validate()
         if not (self.first_name or self.last_name):
             raise ValueError('Requiered firstname or lastname')
+
+    def validate_middle_name(self, value):
+        print('MMMMMMMMMM')
+        print(value)
+        if value is not None and len(value) > 2:
+            raise ValueError('Too long')
 
 
 def valid_user_ids(value):
@@ -78,7 +86,8 @@ class Validators(jrlib.Method):
             'user_id': self.user_id,
             'age': self.age,
             'user_profile': {
-                'first_name': self.user_profile.first_name
+                'first_name': self.user_profile.first_name,
+                'middle_name': self.user_profile.middle_name
             }
         }
 

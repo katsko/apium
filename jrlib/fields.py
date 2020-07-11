@@ -166,7 +166,17 @@ class Obj(BaseField, metaclass=MetaObjField):
         if self.value is not None:
             for validator in self.validators:
                 validator(self)
+            self.validate_fields()
             self.validate()
+
+    def validate_fields(self):
+        for key in self._fields:
+            validator = getattr(self, 'validate_{}'.format(key), None)
+            if validator:
+                try:
+                    validator(getattr(self, key))
+                except Exception as exc:
+                    raise ValueError('{}: {}'.format(key, exc))
 
     def validate(self):
         """В классе-потомке провалидировать"""

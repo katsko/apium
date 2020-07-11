@@ -57,6 +57,7 @@ class SetDefault(jrlib.Method):
             'user_profile': {
                 'first_name': self.user_profile.first_name,
                 'last_name': self.user_profile.last_name,
+                'middle_name': self.user_profile.middle_name,
             },
             'address': {
                 'city': self.address.city,
