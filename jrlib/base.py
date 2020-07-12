@@ -111,7 +111,6 @@ class Method(metaclass=MetaBase):
         print('class method init')
         self.request = request
         self.result = UNDEF
-        self.error = None
         print('M F {}'.format(self._fields))
         for key in self._fields:
             try:
@@ -124,11 +123,10 @@ class Method(metaclass=MetaBase):
             self.validate()
         except Exception:
             raise
-        if not self.error:
-            try:
-                self.result = self.execute()
-            except Exception:
-                raise
+        try:
+            self.result = self.execute()
+        except Exception:
+            raise
 
     def validate_fields(self):
         for key in self._fields:

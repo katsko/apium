@@ -35,7 +35,7 @@ class Field(BaseField):
         if self.value == UNDEF and self.default != UNDEF:
             self.value = self.default()\
                 if callable(self.default) else self.default
-        # self.value = self.to_python(self.value)
+        self.value = self.format()
         self.value = self.clean()
         self._validate_first()
 
@@ -45,11 +45,8 @@ class Field(BaseField):
         удалить лишние пробелы в строке"""
         return self.value
 
-    # TODO: to_python не нужен, можно преобразовывать и чистиь в clean
-    # def to_python(value):
-    #     """В классе-потомке привести значение к нужному типу, например,
-    #     из int в float"""
-    #     return value
+    def format(self):
+        return self.value
 
     def _validate_first(self):
         if self.required and self.value == UNDEF:
@@ -69,12 +66,36 @@ class Field(BaseField):
 
 
 class Int(Field):
+    def format(self):
+        try:
+            return int(float(self.value))
+        except ValueError:
+            return self.value
+
     def validate(self):
         if not isinstance(self.value, int):
             raise TypeError('Expected int')
 
 
+class Float(Field):
+    def format(self):
+        try:
+            return float(self.value)
+        except ValueError:
+            return self.value
+
+    def validate(self):
+        if not isinstance(self.value, float):
+            raise TypeError('Expected float')
+
+
 class Str(Field):
+    def format(self):
+        try:
+            return str(self.value)
+        except Exception:
+            return self.value
+
     def validate(self):
         if not isinstance(self.value, str):
             raise TypeError('Expected str')
@@ -94,9 +115,16 @@ class Email(Str):
 
 
 class Date(Str):
+    def format(self):
+        self.value = super(Date, self).format()
+        try:
+            return datetime.strptime(self.value, '%Y-%m-%d')
+        except Exception:
+            return self.value
+
     def validate(self):
         super(Date, self).validate()
-        self.value = datetime.strptime(self.value, '%Y-%m-%d')
+        datetime.strptime(self.value, '%Y-%m-%d')
 
 
 class List(Field):
@@ -137,6 +165,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         if self.value == UNDEF and self.default != UNDEF:
             self.value = self.default()\
                 if callable(self.default) else self.default
+        self.value = self.format()
         self.value = self.clean()
 
         print('O F {}'.format(self._fields))
@@ -154,6 +183,9 @@ class Obj(BaseField, metaclass=MetaObjField):
         """В классе-потомке привести поле к нужному типу и почистить.
         Например, привести float в int или
         удалить лишние пробелы в строке"""
+        return self.value
+
+    def format(self):
         return self.value
 
     def _validate_first(self):
