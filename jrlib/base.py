@@ -73,7 +73,7 @@ def api_dispatch(request):
     params = body.get('params', {})  # TODO: support params as list (not {})
     jsonrpc_response = {'jsonrpc': '2.0', 'id': request_id}
     try:
-        instance = cls(params)
+        instance = cls(request, params)
         if instance.result is not UNDEF:
             jsonrpc_response.update({'result': instance.result})
         else:
@@ -107,8 +107,9 @@ class MetaBase(type):
 
 class Method(metaclass=MetaBase):
 
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, request, data, *args, **kwargs):
         print('class method init')
+        self.request = request
         self.result = UNDEF
         self.error = None
         print('M F {}'.format(self._fields))
