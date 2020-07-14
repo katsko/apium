@@ -70,10 +70,6 @@ class Int(Field):
         try:
             return int(float(self.value))
         except ValueError:
-            return self.value
-
-    def validate(self):
-        if not isinstance(self.value, int):
             raise TypeError('Expected int')
 
 
@@ -82,10 +78,6 @@ class Float(Field):
         try:
             return float(self.value)
         except ValueError:
-            return self.value
-
-    def validate(self):
-        if not isinstance(self.value, float):
             raise TypeError('Expected float')
 
 
@@ -94,10 +86,6 @@ class Str(Field):
         try:
             return str(self.value)
         except Exception:
-            return self.value
-
-    def validate(self):
-        if not isinstance(self.value, str):
             raise TypeError('Expected str')
 
 
@@ -120,11 +108,7 @@ class Date(Str):
         try:
             return datetime.strptime(self.value, '%Y-%m-%d')
         except Exception:
-            return self.value
-
-    def validate(self):
-        super(Date, self).validate()
-        datetime.strptime(self.value, '%Y-%m-%d')
+            raise TypeError('Expected date %Y-%m-%d')
 
 
 class List(Field):
