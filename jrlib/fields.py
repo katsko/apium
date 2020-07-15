@@ -20,9 +20,9 @@ class Field(BaseField):
     def __init__(self, validators=None, required=False, nullable=True,
                  default=UNDEF):
         self.value = UNDEF
-        # TODO: if validators isn't list - raise exception
-        # not raise ValueError, should new type for Internal Error
-        self.validators = validators if isinstance(validators, list) else []
+        if validators is not None and not isinstance(validators, list):
+            raise TypeError('validators is not iterable')
+        self.validators = validators
         self.required = required
         self.nullable = nullable
         self.default = default
@@ -131,9 +131,9 @@ class Obj(BaseField, metaclass=MetaObjField):
                  default=UNDEF, fields=None):
         print('class objfield init')
         self.value = UNDEF
-        # TODO: if validators isn't list - raise exception
-        # not raise ValueError, should new type for Internal Error
-        self.validators = validators if isinstance(validators, list) else []
+        if validators is not None and not isinstance(validators, list):
+            raise TypeError('validators is not iterable')
+        self.validators = validators
         self.required = required
         self.nullable = nullable
         self.default = default
