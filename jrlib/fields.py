@@ -22,7 +22,7 @@ class Field(BaseField):
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
             raise TypeError('validators is not iterable')
-        self.validators = validators
+        self.validators = validators if validators else []
         self.required = required
         self.nullable = nullable
         self.default = default
@@ -133,7 +133,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
             raise TypeError('validators is not iterable')
-        self.validators = validators
+        self.validators = validators if validators else []
         self.required = required
         self.nullable = nullable
         self.default = default

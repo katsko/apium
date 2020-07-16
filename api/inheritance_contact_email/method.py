@@ -14,7 +14,5 @@ class InheritanceContactEmail(BaseContact):
 
     def validate(self):
         super(InheritanceContactEmail, self).validate()
-        print(self.email)
-        print(self.user_id)
         if not self.email or len(self.email) != self.user_id:
             raise ValueError('Error email lenght')

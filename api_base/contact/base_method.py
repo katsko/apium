@@ -11,7 +11,7 @@ class BaseContact(jrlib.Method):
     user_id = jf.Int(validators=[valid_user_ids])
     comment = jf.Str()
 
-    # def validate(self):
-    #     super(BaseContact, self).validate()
-    #     if not self.comment or len(self.comment) != self.user_id:
-    #         raise ValueError('Error comment lenght')
+    def validate(self):
+        super(BaseContact, self).validate()
+        if not self.comment or len(self.comment) != self.user_id:
+            raise ValueError('Error comment lenght')

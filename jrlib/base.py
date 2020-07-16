@@ -95,13 +95,18 @@ class MetaBase(type):
     def __new__(self, name, bases, namespace):
         cls = super(MetaBase, self).__new__(
             self, name, bases, namespace)
-        if len(cls.mro()) > 2:  # 1 - object, 2 - Method, 3 - UserCustomMethod
+        cls_mro = cls.mro()
+        if len(cls_mro) > 2:  # 1 - UserCustomMethod, 2 - Method, 3 - object
             api_name = cls.__name__
             api_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', api_name)
             api_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', api_name).lower()
             api_methods[api_name] = cls
         cls._fields = [key for key, val in namespace.items()
                        if isinstance(val, BaseField)]
+        # form inheritance
+        for item in cls_mro[1:-1]:  # exclude UserCustomMethod and object
+            if hasattr(item, '_fields'):
+                cls._fields.extend(item._fields)
         return cls
 
 
