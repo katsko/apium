@@ -123,23 +123,15 @@ class Method(metaclass=MetaBase):
                 setattr(self, key, data.get(key, UNDEF))
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
-        # TODO: check: is 'try' necessary?
-        try:
-            self.validate_fields()
-            self.validate()
-        except Exception:
-            raise
+        self.validate_fields()
+        self.validate()
         # for middleware (run __middle method)
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
                 self, '_{}__middle'.format(item.__name__), None)
             if middle_method:
                 middle_method()
-        # TODO: check: is 'try' necessary?
-        try:
-            self.result = self.execute()
-        except Exception:
-            raise
+        self.result = self.execute()
 
     def validate_fields(self):
         for key in self._fields:
