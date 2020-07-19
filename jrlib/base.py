@@ -132,6 +132,12 @@ class Method(metaclass=MetaBase):
             if middle_method:
                 middle_method()
         self.result = self.execute()
+        # for middleware after execute (run __after method)
+        for item in type(self).mro()[:-1]:
+            after_method = getattr(
+                self, '_{}__after'.format(item.__name__), None)
+            if after_method:
+                after_method()
 
     def validate_fields(self):
         for key in self._fields:
