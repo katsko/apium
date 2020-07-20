@@ -13,10 +13,10 @@ class Auth(jrlib.Method):
             raise ValueError('Access denied')
 
     def __after(self):
-        self.result.extend({'user_hash': 'abc'})
+        self.result.update({'user_hash': 'abc'})
 
 
-class Middle(Auth):
+class After(Auth):
     msg = jf.Str()
 
     def execute(self):
