@@ -36,14 +36,7 @@ class Field(BaseField):
             self.value = self.default()\
                 if callable(self.default) else self.default
         self.value = self.format()
-        self.value = self.clean()
         self._validate_first()
-
-    def clean(self):
-        """В классе-потомке привести поле к нужному типу и почистить.
-        Например, привести float в int или
-        удалить лишние пробелы в строке"""
-        return self.value
 
     def format(self):
         return self.value
@@ -150,7 +143,6 @@ class Obj(BaseField, metaclass=MetaObjField):
             self.value = self.default()\
                 if callable(self.default) else self.default
         self.value = self.format()
-        self.value = self.clean()
 
         print('O F {}'.format(self._fields))
         obj_value = {} if self.value == UNDEF else self.value
@@ -162,12 +154,6 @@ class Obj(BaseField, metaclass=MetaObjField):
                 raise ValueError('{}: {}'.format(key, exc))
 
         self._validate_first()
-
-    def clean(self):
-        """В классе-потомке привести поле к нужному типу и почистить.
-        Например, привести float в int или
-        удалить лишние пробелы в строке"""
-        return self.value
 
     def format(self):
         return self.value
