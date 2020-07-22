@@ -153,11 +153,3 @@ class Method(metaclass=MetaBase):
 
     def execute(self):
         pass
-
-    def before(self):
-        # TODO: вместо before будут декораторы, через которые можно навешивать валидаторы
-        pass
-
-    def after(self):
-        # TODO: аналогично before
-        pass
