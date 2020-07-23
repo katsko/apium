@@ -1,5 +1,7 @@
 from datetime import datetime
 
+ORDER_DEFAULT = 1000000
+
 
 class Undefined:
     """
@@ -18,7 +20,7 @@ class BaseField:
 
 class Field(BaseField):
     def __init__(self, validators=None, required=False, nullable=True,
-                 default=UNDEF):
+                 default=UNDEF, order=ORDER_DEFAULT):
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
             raise TypeError('validators is not iterable')
@@ -26,11 +28,16 @@ class Field(BaseField):
         self.required = required
         self.nullable = nullable
         self.default = default
+        self.order = order
 
     def __get__(self, obj, cls):
         return self.value
 
     def __set__(self, obj, value):
+        print('setter')
+        print(type(obj))
+        print(obj)
+        print('/setter')
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             self.value = self.default()\
@@ -121,7 +128,7 @@ class MetaObjField(type):
 class Obj(BaseField, metaclass=MetaObjField):
 
     def __init__(self, validators=None, required=False, nullable=True,
-                 default=UNDEF, fields=None):
+                 default=UNDEF, order=ORDER_DEFAULT, fields=None):
         print('class objfield init')
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
@@ -130,6 +137,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.required = required
         self.nullable = nullable
         self.default = default
+        self.order = order
 
         if isinstance(fields, dict):
             for key, val in fields.items():

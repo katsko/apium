@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import sys
+from collections import OrderedDict
 from importlib import import_module
 import traceback
 from django.conf import settings
@@ -101,12 +102,25 @@ class MetaBase(type):
             api_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', api_name)
             api_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', api_name).lower()
             api_methods[api_name] = cls
-        cls._fields = [key for key, val in namespace.items()
-                       if isinstance(val, BaseField)]
+        # cls._fields = [key for key, val in namespace.items()
+        #                if isinstance(val, BaseField)]
+        cls._fields = {key: val.order for key, val in namespace.items()
+                       if isinstance(val, BaseField)}
+        print('namespace')
+        print(namespace.items())
+        for key, val in namespace.items():
+            if isinstance(val, BaseField):
+                print(type(val))
+                print(val.required)
+                print(val.order)
+        print('/namespace')
         # form inheritance
         for item in cls_mro[1:-1]:  # exclude UserCustomMethod and object
             if hasattr(item, '_fields'):
-                cls._fields.extend(item._fields)
+                # cls._fields.extend(item._fields)
+                cls._fields.update(item._fields)
+        cls._fields = OrderedDict(
+            sorted(cls._fields.items(), key=lambda item: item[0]))
         return cls
 
 
