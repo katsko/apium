@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime
 
 ORDER_DEFAULT = 1000000
@@ -69,16 +70,26 @@ class Int(Field):
     def format(self):
         try:
             return int(float(self.value))
-        except ValueError:
-            raise TypeError('Expected int')
+        except (ValueError, TypeError):
+            return self.value
+
+    def validate(self):
+        super(Int, self).validate()
+        if not isinstance(self.value, int):
+            raise ValueError('Expected int')
 
 
 class Float(Field):
     def format(self):
         try:
             return float(self.value)
-        except ValueError:
-            raise TypeError('Expected float')
+        except (ValueError, TypeError):
+            return self.value
+
+    def validate(self):
+        super(Float, self).validate()
+        if not isinstance(self.value, float):
+            raise ValueError('Expected float')
 
 
 class Str(Field):
@@ -120,8 +131,12 @@ class List(Field):
 class MetaObjField(type):
     def __new__(self, name, bases, namespace):
         cls = super(MetaObjField, self).__new__(self, name, bases, namespace)
-        cls._fields = [key for key, val in namespace.items()
-                       if isinstance(val, BaseField)]
+        # cls._fields = [key for key, val in namespace.items()
+        #                if isinstance(val, BaseField)]
+        cls._fields = {key: val.order for key, val in namespace.items()
+                       if isinstance(val, BaseField)}
+        cls._fields = OrderedDict(
+            sorted(cls._fields.items(), key=lambda item: item[0]))
         return cls
 
 
@@ -143,7 +158,10 @@ class Obj(BaseField, metaclass=MetaObjField):
             for key, val in fields.items():
                 setattr(type(self), key, val)
                 if isinstance(val, BaseField):
-                    self._fields.append(key)
+                    # self._fields.append(key)
+                    self._fields.update({key: val.order})
+            self._fields = OrderedDict(
+                sorted(self._fields.items(), key=lambda item: item[0]))
 
     def __set__(self, obj, value):
         self.value = value
