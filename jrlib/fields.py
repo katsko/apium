@@ -35,10 +35,6 @@ class Field(BaseField):
         return self.value
 
     def __set__(self, obj, value):
-        print('setter')
-        print(type(obj))
-        print(obj)
-        print('/setter')
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             self.value = self.default()\
@@ -136,7 +132,7 @@ class MetaObjField(type):
         cls._fields = {key: val.order for key, val in namespace.items()
                        if isinstance(val, BaseField)}
         cls._fields = OrderedDict(
-            sorted(cls._fields.items(), key=lambda item: item[0]))
+            sorted(cls._fields.items(), key=lambda item: item[1]))
         return cls
 
 
@@ -161,7 +157,7 @@ class Obj(BaseField, metaclass=MetaObjField):
                     # self._fields.append(key)
                     self._fields.update({key: val.order})
             self._fields = OrderedDict(
-                sorted(self._fields.items(), key=lambda item: item[0]))
+                sorted(self._fields.items(), key=lambda item: item[1]))
 
     def __set__(self, obj, value):
         self.value = value
