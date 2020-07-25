@@ -102,14 +102,11 @@ class MetaBase(type):
             api_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', api_name)
             api_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', api_name).lower()
             api_methods[api_name] = cls
-        # cls._fields = [key for key, val in namespace.items()
-        #                if isinstance(val, BaseField)]
         cls._fields = {key: val.order for key, val in namespace.items()
                        if isinstance(val, BaseField)}
         # form inheritance
         for item in cls_mro[1:-1]:  # exclude UserCustomMethod and object
             if hasattr(item, '_fields'):
-                # cls._fields.extend(item._fields)
                 cls._fields.update(item._fields)
         cls._fields = OrderedDict(
             sorted(cls._fields.items(), key=lambda item: item[1]))
@@ -127,9 +124,12 @@ class Method(metaclass=MetaBase):
             try:
                 print('METHOD - {} : {}'.format(key, data.get(key)))
                 setattr(self, key, data.get(key, UNDEF))
+                # for ext validate (run validate_<field>)
+                validator = getattr(self, 'validate_{}'.format(key), None)
+                if validator:
+                    validator(getattr(self, key))
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
-        self.validate_fields()
         self.validate()
         # for middleware (run __middle method)
         for item in type(self).mro()[:-1]:
@@ -144,15 +144,6 @@ class Method(metaclass=MetaBase):
                 self, '_{}__after'.format(item.__name__), None)
             if after_method:
                 after_method()
-
-    def validate_fields(self):
-        for key in self._fields:
-            validator = getattr(self, 'validate_{}'.format(key), None)
-            if validator:
-                try:
-                    validator(getattr(self, key))
-                except Exception as exc:
-                    raise ValueError('{}: {}'.format(key, exc))
 
     def validate(self):
         pass

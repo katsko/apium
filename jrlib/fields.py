@@ -127,8 +127,6 @@ class List(Field):
 class MetaObjField(type):
     def __new__(self, name, bases, namespace):
         cls = super(MetaObjField, self).__new__(self, name, bases, namespace)
-        # cls._fields = [key for key, val in namespace.items()
-        #                if isinstance(val, BaseField)]
         cls._fields = {key: val.order for key, val in namespace.items()
                        if isinstance(val, BaseField)}
         cls._fields = OrderedDict(
@@ -154,7 +152,6 @@ class Obj(BaseField, metaclass=MetaObjField):
             for key, val in fields.items():
                 setattr(type(self), key, val)
                 if isinstance(val, BaseField):
-                    # self._fields.append(key)
                     self._fields.update({key: val.order})
             self._fields = OrderedDict(
                 sorted(self._fields.items(), key=lambda item: item[1]))
@@ -172,6 +169,9 @@ class Obj(BaseField, metaclass=MetaObjField):
             try:
                 print('OBJF - {} : {}'.format(key, obj_value.get(key, UNDEF)))
                 setattr(self, key, obj_value.get(key, UNDEF))
+                validator = getattr(self, 'validate_{}'.format(key), None)
+                if validator:
+                    validator(getattr(self, key))
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
 
@@ -190,17 +190,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         if self.value is not None:
             for validator in self.validators:
                 validator(self)
-            self.validate_fields()
             self.validate()
-
-    def validate_fields(self):
-        for key in self._fields:
-            validator = getattr(self, 'validate_{}'.format(key), None)
-            if validator:
-                try:
-                    validator(getattr(self, key))
-                except Exception as exc:
-                    raise ValueError('{}: {}'.format(key, exc))
 
     def validate(self):
         """В классе-потомке провалидировать"""
