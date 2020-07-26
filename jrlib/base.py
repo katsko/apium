@@ -2,7 +2,7 @@ import json
 import logging
 import re
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from importlib import import_module
 import traceback
 from django.conf import settings
@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
 
 api_methods = {}
+order_middles = defaultdict(list)
 
 DEBUG = settings.DEBUG
 JR_API_DIR = settings.JR_API_DIR
@@ -150,3 +151,15 @@ class Method(metaclass=MetaBase):
 
     def execute(self):
         pass
+
+
+def order(value):
+    def decorator(func):
+        order_middles[value].append(func)
+
+        def wrapper(*args, **kwargs):
+            return_value = func(*args, **kwargs)
+            return return_value
+
+        return wrapper
+    return decorator

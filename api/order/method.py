@@ -5,7 +5,7 @@ from jrlib import jf
 class Auth(jrlib.Method):
     token = jf.Str(order=-100)
 
-    # @middle_order(-100)
+    @jrlib.order(-100)
     def __middle(self):
         print('auth middle')
         if not self.token == '1':
