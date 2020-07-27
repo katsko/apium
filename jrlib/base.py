@@ -12,10 +12,14 @@ from .fields import UNDEF, BaseField
 
 api_methods = {}
 order_middles = defaultdict(list)
+fields_middles_map = defaultdict(list)
 
 DEBUG = settings.DEBUG
 JR_API_DIR = settings.JR_API_DIR
 JR_API_FILE = settings.JR_API_FILE
+
+middles_is_mapped_to_fields = []
+last_middles = []
 
 
 @csrf_exempt
@@ -121,6 +125,19 @@ class Method(metaclass=MetaBase):
         self.request = request
         self.result = UNDEF
         print('M F {}'.format(self._fields))
+        fields = list(self._fields.items())
+        # middles_is_mapped_to_fields = []
+        if fields:
+            prev_field = fields[0]
+            for item_field in fields[1:]:
+                for order, middles in order_middles.items():
+                    for middle in middles:
+                        if middle not in middles_is_mapped_to_fields:
+                            if order < item_field[1]:
+                                fields_middles_map[prev_field[0]].append(
+                                    middle)
+                                middles_is_mapped_to_fields.append(middle)
+                prev_field = item_field
         for key in self._fields:
             try:
                 print('METHOD - {} : {}'.format(key, data.get(key)))
@@ -129,6 +146,9 @@ class Method(metaclass=MetaBase):
                 validator = getattr(self, 'validate_{}'.format(key), None)
                 if validator:
                     validator(getattr(self, key))
+                for middle_method in fields_middles_map[key]:
+                    middle_method(self)
+                    pass
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
         self.validate()
@@ -136,8 +156,10 @@ class Method(metaclass=MetaBase):
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
                 self, '_{}__middle'.format(item.__name__), None)
-            if middle_method:
+            if (middle_method and
+                    middle_method not in middles_is_mapped_to_fields):
                 middle_method()
+                last_middles.append(middle_method)
         self.result = self.execute()
         # for middleware after execute (run __after method)
         for item in type(self).mro()[:-1]:

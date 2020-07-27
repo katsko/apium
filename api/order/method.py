@@ -1,8 +1,16 @@
 import jrlib
 from jrlib import jf
+from jrlib.base import order_middles, fields_middles_map, middles_is_mapped_to_fields, last_middles
 
 
-class Auth(jrlib.Method):
+class AuthLogBefore(jrlib.Method):
+
+    @jrlib.order(-100)
+    def __middle(self):
+        print('auth log before')
+
+
+class AuthCheck(AuthLogBefore):
     token = jf.Str(order=-100)
 
     @jrlib.order(-100)
@@ -13,6 +21,13 @@ class Auth(jrlib.Method):
 
     def validate_token(self, value):
         print('ext validator (token) -100')
+
+
+class Auth(AuthCheck):
+
+    @jrlib.order(-100)
+    def __middle(self):
+        print('auth log after')
 
 
 class MyStr1(jf.Str):
@@ -42,22 +57,56 @@ class CarField(jf.Obj):
         print('validator in field (car) 4')
 
 
-class Order(Auth):
+class CarMiddle1(jrlib.Method):
+
+    @jrlib.order(40)
+    def __middle(self):
+        print('car middle 1')
+
+
+class CarMiddle2(jrlib.Method):
+
+    @jrlib.order(41)
+    def __middle(self):
+        print('car middle 2')
+
+
+class PassengerMiddle(jrlib.Method):
+
+    @jrlib.order(20)
+    def __middle(self):
+        print('passenger middle')
+
+
+class LastestMiddle(jrlib.Method):
+
+    @jrlib.order(999999999999)
+    def __middle(self):
+        print('lastest middle')
+
+
+class Order(Auth, CarMiddle1, LastestMiddle, CarMiddle2, PassengerMiddle):
     msg = jf.Str(required=True)
-    city = jf.Str(required=True, order=5)
-    car = CarField(order=4)
+    city = jf.Str(required=True, order=50)
+    car = CarField(order=40)
     passenger = jf.Obj(
         fields=dict(
-            name=jf.Str(order=40),
-            age=jf.Int(order=30)
+            name=jf.Str(order=400),
+            age=jf.Int(order=300)
         ),
-        order=2
+        order=20
     )
     about = jf.Str()
 
     def execute(self):
         print('execute')
         print(type(self.msg))
+        print(order_middles)
+        print(fields_middles_map)
+        print('middles_is_mapped_to_fields')
+        print(middles_is_mapped_to_fields)
+        print('last_middles')
+        print(last_middles)
         print('/execute')
         return self.msg
 
