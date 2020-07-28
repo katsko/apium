@@ -84,6 +84,8 @@ class LastestMiddle(jrlib.Method):
     def __middle(self):
         print('lastest middle')
 
+# TODO: add middleware without order decorator for test
+
 
 class Order(Auth, CarMiddle1, LastestMiddle, CarMiddle2, PassengerMiddle):
     msg = jf.Str(required=True)

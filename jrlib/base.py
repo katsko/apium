@@ -11,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
 
 api_methods = {}
+
+# TODO: move from global namespace or clean each time by run api method
 order_middles = defaultdict(list)
 fields_middles_map = defaultdict(list)
 
@@ -18,6 +20,7 @@ DEBUG = settings.DEBUG
 JR_API_DIR = settings.JR_API_DIR
 JR_API_FILE = settings.JR_API_FILE
 
+# TODO: remove from global namespace after testing ordered middleware
 middles_is_mapped_to_fields = []
 last_middles = []
 
@@ -127,6 +130,7 @@ class Method(metaclass=MetaBase):
         print('M F {}'.format(self._fields))
         fields = list(self._fields.items())
         # middles_is_mapped_to_fields = []
+        # TODO: run middleware before all if order_middle less then order first field
         if fields:
             prev_field = fields[0]
             for item_field in fields[1:]:
@@ -153,6 +157,8 @@ class Method(metaclass=MetaBase):
                 raise ValueError('{}: {}'.format(key, exc))
         self.validate()
         # for middleware (run __middle method)
+        # TODO: run middleware that order_middle great then last field
+        # TODO: run middleware if middleware not ordered by decorator
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
                 self, '_{}__middle'.format(item.__name__), None)
