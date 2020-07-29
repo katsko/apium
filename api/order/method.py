@@ -78,16 +78,31 @@ class PassengerMiddle(jrlib.Method):
         print('passenger middle')
 
 
-class LastestMiddle(jrlib.Method):
+class FirstMiddle(jrlib.Method):
 
-    @jrlib.order(999999999999)
+    @jrlib.order(-100000)
     def __middle(self):
         print('lastest middle')
 
-# TODO: add middleware without order decorator for test
+
+class LatestMiddle(jrlib.Method):
+
+    # if order 1 000 000 or great - then run this middleware after middlewares
+    # without order
+    @jrlib.order(1000000)
+    def __middle(self):
+        print('latest middle')
 
 
-class Order(Auth, CarMiddle1, LastestMiddle, CarMiddle2, PassengerMiddle):
+class MiddleWoutOrder(jrlib.Method):
+
+    # run after ordered middlewares but before 1 000 000 order middlwares
+    def __middle(self):
+        print('without order middle')
+
+
+class Order(FirstMiddle, Auth, CarMiddle1, LatestMiddle, CarMiddle2,
+            PassengerMiddle, MiddleWoutOrder):
     msg = jf.Str(required=True)
     city = jf.Str(required=True, order=50)
     car = CarField(order=40)
