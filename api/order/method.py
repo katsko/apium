@@ -82,7 +82,7 @@ class FirstMiddle(jrlib.Method):
 
     @jrlib.order(-100000)
     def __middle(self):
-        print('lastest middle')
+        print('first middle')
 
 
 class LatestMiddle(jrlib.Method):
@@ -124,6 +124,11 @@ class Order(FirstMiddle, Auth, CarMiddle1, LatestMiddle, CarMiddle2,
         print(middles_is_mapped_to_fields)
         print('last_middles')
         print(last_middles)
+        print('ALL middle')
+        for item in Order.mro():
+            name = '_{}__middle'.format(item.__name__)
+            middle_method = getattr(self, name, None)
+            print(name, middle_method)
         print('/execute')
         return self.msg
 
