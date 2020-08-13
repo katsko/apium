@@ -9,6 +9,7 @@ class Undefined:
     Type for api-field if field does not exist in json.
     This field is not None, exactly does not exist.
     """
+    # TODO: add __slots__ to lite class
     pass
 
 

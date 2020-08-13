@@ -13,7 +13,6 @@ from .fields import UNDEF, BaseField
 api_methods = {}
 
 # TODO: move from global namespace or clean each time by run api method
-order_middles = defaultdict(list)
 middle_order = {}
 fields_middles_map = defaultdict(list)
 
@@ -22,8 +21,12 @@ JR_API_DIR = settings.JR_API_DIR
 JR_API_FILE = settings.JR_API_FILE
 
 # TODO: remove from global namespace after testing ordered middleware
-middles_is_mapped_to_fields = []
+# middles_is_mapped_to_fields = []
 last_middles = []
+last_middles_name = set()
+
+first_middles = []
+first_middles_name = set()
 
 
 @csrf_exempt
@@ -130,19 +133,16 @@ class Method(metaclass=MetaBase):
         self.result = UNDEF
         print('M F {}'.format(self._fields))
         fields = list(self._fields.items())
-        # middles_is_mapped_to_fields = []
-        # TODO: run middleware before all if order_middle less then order first field
-        # if fields:
-        #     prev_field = fields[0]
-        #     for item_field in fields[1:]:
-        #         for order, middles in order_middles.items():
-        #             for middle in middles:
-        #                 if middle not in middles_is_mapped_to_fields:
-        #                     if order < item_field[1]:
-        #                         fields_middles_map[prev_field[0]].append(
-        #                             middle)
-        #                         middles_is_mapped_to_fields.append(middle)
-        #         prev_field = item_field
+        middles_is_mapped_to_fields = set()
+        # run @order_first middlewares
+        for item in type(self).mro()[:-1]:
+            middle_method = getattr(
+                self, '_{}__middle'.format(item.__name__), None)
+            orig_qualname = '{}.__middle'.format(item.__name__)
+            if (middle_method and
+                    middle_method not in middles_is_mapped_to_fields and
+                    orig_qualname in first_middles_name):
+                middle_method()
         if fields:
             middle_methods_mro = {}
             for item in type(self).mro()[:-1]:
@@ -150,20 +150,24 @@ class Method(metaclass=MetaBase):
                     self, '_{}__middle'.format(item.__name__), None)
                 if middle_method:
                     orig_qualname = '{}.__middle'.format(item.__name__)
-                    print('???????', orig_qualname)
-                    # middle_methods_mro.append(middle_method)
                     middle_methods_mro[orig_qualname] = middle_method
             prev_field = fields[0]
             print('middle_order', middle_order)
+            # run middlewares if order of middle less then order of first field
+            for orig_qualname, method in middle_methods_mro.items():
+                order = middle_order.get(orig_qualname)
+                if method not in middles_is_mapped_to_fields:
+                    if order is not None and order < prev_field[1]:
+                        method()
+                        middles_is_mapped_to_fields.add(method)
             for item_field in fields[1:]:
                 for orig_qualname, method in middle_methods_mro.items():
-                    print('!!!!!!!', orig_qualname)
                     order = middle_order.get(orig_qualname)
                     if method not in middles_is_mapped_to_fields:
                         if order is not None and order < item_field[1]:
                             fields_middles_map[prev_field[0]].append(
                                 method)
-                            middles_is_mapped_to_fields.append(method)
+                            middles_is_mapped_to_fields.add(method)
                 prev_field = item_field
         for key in self._fields:
             try:
@@ -180,15 +184,25 @@ class Method(metaclass=MetaBase):
                 raise ValueError('{}: {}'.format(key, exc))
         self.validate()
         # for middleware (run __middle method)
-        # TODO: run middleware that order_middle great then last field
-        # TODO: run middleware if middleware not ordered by decorator
+        # run middleware if middleware not ordered by decorator
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
                 self, '_{}__middle'.format(item.__name__), None)
+            orig_qualname = '{}.__middle'.format(item.__name__)
             if (middle_method and
-                    middle_method not in middles_is_mapped_to_fields):
+                    middle_method not in middles_is_mapped_to_fields and
+                    orig_qualname not in first_middles_name and
+                    orig_qualname not in last_middles_name):
                 middle_method()
-                last_middles.append(middle_method)
+        # run @order_last middlewares
+        for item in type(self).mro()[:-1]:
+            middle_method = getattr(
+                self, '_{}__middle'.format(item.__name__), None)
+            orig_qualname = '{}.__middle'.format(item.__name__)
+            if (middle_method and
+                    middle_method not in middles_is_mapped_to_fields and
+                    orig_qualname in last_middles_name):
+                middle_method()
         self.result = self.execute()
         # for middleware after execute (run __after method)
         for item in type(self).mro()[:-1]:
@@ -206,7 +220,6 @@ class Method(metaclass=MetaBase):
 
 def order(value):
     def decorator(func):
-        order_middles[value].append(func)
         middle_order[func.__qualname__] = value
 
         def wrapper(*args, **kwargs):
@@ -214,5 +227,26 @@ def order(value):
             return return_value
 
         return wrapper
-    # print(id(decorator))
     return decorator
+
+
+def order_first(func):
+    first_middles.append(func)
+    first_middles_name.add(func.__qualname__)
+
+    def wrapper(*args, **kwargs):
+        return_value = func(*args, **kwargs)
+        return return_value
+
+    return wrapper
+
+
+def order_last(func):
+    last_middles.append(func)
+    last_middles_name.add(func.__qualname__)
+
+    def wrapper(*args, **kwargs):
+        return_value = func(*args, **kwargs)
+        return return_value
+
+    return wrapper
