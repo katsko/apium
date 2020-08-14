@@ -6,7 +6,7 @@ from collections import OrderedDict, defaultdict
 from importlib import import_module
 import traceback
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
 
@@ -86,9 +86,12 @@ def api_dispatch(request):
     params = body.get('params', {})  # TODO: support params as list (not {})
     jsonrpc_response = {'jsonrpc': '2.0', 'id': request_id}
     try:
-        instance = cls(request, params)
+        response = HttpResponse(content_type='application/json')
+        instance = cls(request, response, params)
         if instance.result is not UNDEF:
             jsonrpc_response.update({'result': instance.result})
+            instance.response.content = json.dumps(jsonrpc_response)
+            return instance.response
         else:
             jsonrpc_response.update({'error': {'code': -32603,
                                                'message': 'Internal error'}})
@@ -127,9 +130,10 @@ class MetaBase(type):
 
 class Method(metaclass=MetaBase):
 
-    def __init__(self, request, data, *args, **kwargs):
+    def __init__(self, request, response, data, *args, **kwargs):
         print('class method init')
         self.request = request
+        self.response = response
         self.result = UNDEF
         print('M F {}'.format(self._fields))
         fields = list(self._fields.items())
