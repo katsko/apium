@@ -43,6 +43,7 @@ class Field(BaseField):
         return self.value
 
     def __set__(self, obj, value):
+        self.method_cache = obj.method_cache
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             self.value = (
@@ -180,11 +181,13 @@ class Obj(BaseField, metaclass=MetaObjField):
             )
 
     def __set__(self, obj, value):
+        self.method_cache = obj.method_cache
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             self.value = (
                 self.default() if callable(self.default) else self.default
             )
+        self._validate_first()
         self.value = self.format()
 
         print("O F {}".format(self._fields))
@@ -199,7 +202,7 @@ class Obj(BaseField, metaclass=MetaObjField):
             except Exception as exc:
                 raise ValueError("{}: {}".format(key, exc))
 
-        self._validate_first()
+        self._validate_next()
 
     def format(self):
         return self.value
@@ -210,12 +213,14 @@ class Obj(BaseField, metaclass=MetaObjField):
         if not self.nullable and self.value is None:
             raise ValueError("Expected not None")
         if self.value == UNDEF:
-            self.value = None
-        if self.value is not None:
+            self.value = {}
+
+    def _validate_next(self):
+        if self.value is not {}:
             for validator in self.validators:
                 validator(self)
             self.validate()
 
     def validate(self):
-        """В классе-потомке провалидировать"""
-        pass
+        if not isinstance(self.value, dict):
+            raise TypeError("Expected dict (json)")

@@ -129,12 +129,14 @@ class MetaBase(type):
 
 
 class Method(metaclass=MetaBase):
+    method_cache = {}
 
     def __init__(self, request, response, data, *args, **kwargs):
         print('class method init')
         self.request = request
         self.response = response
         self.result = UNDEF
+        self.method_cache = {}
         print('M F {}'.format(self._fields))
         fields = list(self._fields.items())
         middles_is_mapped_to_fields = set()
