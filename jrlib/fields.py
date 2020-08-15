@@ -172,6 +172,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.order = order
 
         if isinstance(fields, dict):
+            self._fields = {}
             for key, val in fields.items():
                 setattr(type(self), key, val)
                 if isinstance(val, BaseField):
