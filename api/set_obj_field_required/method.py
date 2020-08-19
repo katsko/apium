@@ -15,5 +15,5 @@ class SetObjFieldRequired(jrlib.Method):
 
     def execute(self):
         return {
-            'user_id': self.user_id,
+            "user_id": self.user_id,
         }

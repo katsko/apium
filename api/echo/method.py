@@ -1,5 +1,6 @@
 import jrlib
 from jrlib import jf
+
 # from jrlib import middleware  # пока этого нет
 
 # TODO: можно добавлять декоратор, в котором параметр - это
@@ -10,15 +11,16 @@ from jrlib import jf
 # @middleware(Logger)
 # @middleware(Auth)
 
+
 class Echo(jrlib.Method):
     msg = jf.Str(required=True)
 
     def validate(self):
-        print('11111111111')
+        print("11111111111")
         super(Echo, self).validate()
-        if self.msg == '222':
-            raise ValueError('error 222!!!!')
-        print('22222222222')
+        if self.msg == "222":
+            raise ValueError("error 222!!!!")
+        print("22222222222")
 
     def execute(self):
         return self.msg

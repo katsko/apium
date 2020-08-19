@@ -15,9 +15,10 @@ class UserProfile(jf.Obj):
     last_name = StripStr()
 
     def format(self):
-        if 'middle_name' in self.value and 'first_name' in self.value:
-            self.value['first_name'] = '{} {}'.format(
-                self.value['first_name'], self.value['middle_name'])
+        if "middle_name" in self.value and "first_name" in self.value:
+            self.value["first_name"] = "{} {}".format(
+                self.value["first_name"], self.value["middle_name"]
+            )
         return self.value
 
 
@@ -29,11 +30,11 @@ class Format(jrlib.Method):
 
     def execute(self):
         return {
-            'user_id': self.user_id,
-            'age': self.age,
-            'gender': self.gender,
-            'user_profile': {
-                'first_name': self.user_profile.first_name,
-                'last_name': self.user_profile.last_name,
-            }
+            "user_id": self.user_id,
+            "age": self.age,
+            "gender": self.gender,
+            "user_profile": {
+                "first_name": self.user_profile.first_name,
+                "last_name": self.user_profile.last_name,
+            },
         }

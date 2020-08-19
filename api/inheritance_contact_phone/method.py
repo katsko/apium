@@ -7,12 +7,12 @@ class InheritanceContactPhone(BaseContact):
 
     def execute(self):
         return {
-            'user_id': self.user_id,
-            'comment': self.comment,
-            'phone': self.phone,
+            "user_id": self.user_id,
+            "comment": self.comment,
+            "phone": self.phone,
         }
 
     def validate(self):
         super(InheritanceContactPhone, self).validate()
         if not self.phone or len(self.phone) != self.user_id:
-            raise ValueError('Error phone lenght')
+            raise ValueError("Error phone lenght")

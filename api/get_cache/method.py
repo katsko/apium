@@ -23,7 +23,6 @@ class AuthCheck(jrlib.Method):
 
 
 class CacheTestField(jf.Str):
-
     def validate(self):
         super(CacheTestField, self).validate()
         print("1 validator CacheTestField")

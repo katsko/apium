@@ -8,6 +8,6 @@ class SetAnyType(jrlib.Method):
 
     def execute(self):
         return {
-            'user_id': str(type(self.user_id)),
-            'any_data': str(type(self.any_data))
+            "user_id": str(type(self.user_id)),
+            "any_data": str(type(self.any_data)),
         }
