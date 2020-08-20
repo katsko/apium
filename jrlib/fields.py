@@ -104,7 +104,7 @@ class Float(Field):
 class Str(Field):
     def format(self):
         try:
-            return str(self.value)
+            return str(self.value) if self.value is not None else None
         except Exception:
             raise TypeError("Expected str")
 

@@ -25,7 +25,8 @@ class UserProfile(jf.Obj):
 class Format(jrlib.Method):
     user_id = jf.Int()
     age = jf.Float()
-    gender = jf.Str()
+    gender = jf.Str(nullable=False)
+    email = jf.Email(nullable=False)
     user_profile = UserProfile()
 
     def execute(self):
@@ -33,6 +34,7 @@ class Format(jrlib.Method):
             "user_id": self.user_id,
             "age": self.age,
             "gender": self.gender,
+            "email": self.email,
             "user_profile": {
                 "first_name": self.user_profile.first_name,
                 "last_name": self.user_profile.last_name,
