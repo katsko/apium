@@ -60,7 +60,7 @@ class Field(BaseField):
         if self.required and self.value == UNDEF:
             raise ValueError("Field is required")
         if not self.nullable and self.value is None:
-            raise ValueError("Expected not None")
+            raise ValueError("Expected not null")
         if self.value == UNDEF:
             self.value = None
 
@@ -102,17 +102,31 @@ class Float(Field):
 
 
 class Str(Field):
+    def __init__(self, blank=True, *args, **kwargs):
+        super(Str, self).__init__(*args, **kwargs)
+        self.blank = blank
+
     def format(self):
         try:
             return str(self.value) if self.value is not None else None
         except Exception:
             raise TypeError("Expected str")
 
+    def validate(self):
+        if not self.blank and self.value == "":
+            raise ValueError("Expected not blank")
+
 
 class Dict(Field):
+    def __init__(self, blank=True, *args, **kwargs):
+        super(Dict, self).__init__(*args, **kwargs)
+        self.blank = blank
+
     def validate(self):
         if not isinstance(self.value, dict):
             raise TypeError("Expected dict (json)")
+        if not self.blank and self.value == {}:
+            raise ValueError("Expected not blank")
 
 
 class Email(Str):
@@ -132,9 +146,15 @@ class Date(Str):
 
 
 class List(Field):
+    def __init__(self, blank=True, *args, **kwargs):
+        super(List, self).__init__(*args, **kwargs)
+        self.blank = blank
+
     def validate(self):
         if not isinstance(self.value, list):
             raise ValueError("Expected list")
+        if not self.blank and self.value == []:
+            raise ValueError("Expected not blank")
 
 
 class MetaObjField(type):
@@ -157,6 +177,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         validators=None,
         required=False,
         nullable=True,
+        blank=True,
         default=UNDEF,
         order=ORDER_DEFAULT,
         fields=None,
@@ -168,6 +189,7 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.validators = validators if validators else []
         self.required = required
         self.nullable = nullable
+        self.blank = blank
         self.default = default
         self.order = order
 
@@ -225,3 +247,5 @@ class Obj(BaseField, metaclass=MetaObjField):
     def validate(self):
         if not isinstance(self.value, dict):
             raise TypeError("Expected dict (json)")
+        if not self.blank and self.value == {}:
+            raise ValueError("Expected not blank")
