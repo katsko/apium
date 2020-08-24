@@ -160,11 +160,14 @@ class List(Field):
 class MetaObjField(type):
     def __new__(self, name, bases, namespace):
         cls = super(MetaObjField, self).__new__(self, name, bases, namespace)
-        cls._fields = {
-            key: val.order
-            for key, val in namespace.items()
-            if isinstance(val, BaseField)
-        }
+        cls._fields = getattr(cls, "_fields", {})
+        cls._fields.update(
+            {
+                key: val.order
+                for key, val in namespace.items()
+                if isinstance(val, BaseField)
+            }
+        )
         cls._fields = OrderedDict(
             sorted(cls._fields.items(), key=lambda item: item[1])
         )
@@ -245,6 +248,7 @@ class Obj(BaseField, metaclass=MetaObjField):
             self.validate()
 
     def validate(self):
+        # TODO: check is dict before set subfields
         if not isinstance(self.value, dict):
             raise TypeError("Expected dict (json)")
         if not self.blank and self.value == {}:
