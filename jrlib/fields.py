@@ -102,19 +102,46 @@ class Float(Field):
 
 
 class Str(Field):
-    def __init__(self, blank=True, *args, **kwargs):
+    def __init__(
+        self,
+        blank=True,
+        strip=True,
+        cut=None,
+        min_lenght=None,
+        max_lenght=None,
+        *args,
+        **kwargs
+    ):
         super(Str, self).__init__(*args, **kwargs)
         self.blank = blank
+        self.strip = strip
+        self.cut = cut
+        self.min_lenght = min_lenght
+        self.max_lenght = max_lenght
 
     def format(self):
-        try:
-            return str(self.value) if self.value is not None else None
-        except Exception:
-            raise TypeError("Expected str")
+        value = self.value
+        if value is not None:
+            if not isinstance(value, (str, int, float)):
+                raise TypeError("Expected str")
+            value = str(value)
+            if self.strip:
+                value = value.strip()
+            if self.cut is not None:
+                value = value[:self.cut]
+        return value
 
     def validate(self):
-        if not self.blank and self.value == "":
+        value = self.value
+        if not self.blank and value == "":
             raise ValueError("Expected not blank")
+        value_len = len(value)
+        min_lenght = self.min_lenght
+        max_lenght = self.max_lenght
+        if min_lenght is not None and value_len < min_lenght:
+            raise ValueError(f"Str min lenght must be {min_lenght}")
+        if max_lenght is not None and value_len > max_lenght:
+            raise ValueError(f"Str max lenght must be {max_lenght}")
 
 
 class Dict(Field):
