@@ -61,11 +61,9 @@ class Field(BaseField):
             raise ValueError("Field is required")
         if not self.nullable and self.value is None:
             raise ValueError("Expected not null")
-        if self.value == UNDEF:
-            self.value = None
 
     def _validate_next(self):
-        if self.value is not None:
+        if self.value not in [None, UNDEF]:
             for validator in self.validators:
                 validator(self.value)
             self.validate()
@@ -121,7 +119,7 @@ class Str(Field):
 
     def format(self):
         value = self.value
-        if value is not None:
+        if value not in [None, UNDEF]:
             if not isinstance(value, (str, int, float)):
                 raise TypeError("Expected str")
             value = str(value)

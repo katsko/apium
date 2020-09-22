@@ -29,6 +29,13 @@ first_middles = []
 first_middles_name = set()
 
 
+class ResponseJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if obj == UNDEF:
+            return None
+        return super(ResponseJsonEncoder, self).default(obj)
+
+
 @csrf_exempt
 def api_dispatch(request):
     try:
@@ -110,7 +117,9 @@ def api_dispatch(request):
         instance = cls(request, response, params)
         if instance.result is not UNDEF:
             jsonrpc_response.update({"result": instance.result})
-            instance.response.content = json.dumps(jsonrpc_response)
+            instance.response.content = json.dumps(
+                jsonrpc_response, cls=ResponseJsonEncoder
+            )
             return instance.response
         else:
             jsonrpc_response.update(
