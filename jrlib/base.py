@@ -5,7 +5,6 @@ import sys
 from collections import OrderedDict, defaultdict
 from importlib import import_module
 import traceback
-from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
@@ -16,9 +15,12 @@ api_methods = {}
 middle_order = {}
 fields_middles_map = defaultdict(list)
 
-DEBUG = settings.DEBUG
-JR_API_DIR = settings.JR_API_DIR
-JR_API_FILE = settings.JR_API_FILE
+try:
+    from api.api_settings import DEBUG, JR_API_DIR, JR_API_FILE
+except ImportError:
+    DEBUG = False
+    JR_API_DIR = "api"
+    JR_API_FILE = "method"
 
 # TODO: remove from global namespace after testing ordered middleware
 # middles_is_mapped_to_fields = []
@@ -40,9 +42,7 @@ class ResponseJsonEncoder(json.JSONEncoder):
 def api_handler(request):
     response = HttpResponse(content_type="application/json")
     jsonrpc_response = api_dispatch(request, response, request.body)
-    response.content = json.dumps(
-        jsonrpc_response, cls=ResponseJsonEncoder
-    )
+    response.content = json.dumps(jsonrpc_response, cls=ResponseJsonEncoder)
     return response
 
 

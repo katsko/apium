@@ -15,7 +15,7 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path
-from jrlib import api_handler
+from jrlib.handlers.django.handler import api_handler
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
