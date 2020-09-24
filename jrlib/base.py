@@ -6,7 +6,7 @@ from collections import OrderedDict, defaultdict
 from importlib import import_module
 import traceback
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
 
@@ -37,61 +37,62 @@ class ResponseJsonEncoder(json.JSONEncoder):
 
 
 @csrf_exempt
-def api_dispatch(request):
+def api_handler(request):
+    response = HttpResponse(content_type="application/json")
+    jsonrpc_response = api_dispatch(request, response, request.body)
+    response.content = json.dumps(
+        jsonrpc_response, cls=ResponseJsonEncoder
+    )
+    return response
+
+
+def api_dispatch(request, response, body):
     try:
-        body = json.loads(request.body)
+        body = json.loads(body)
     except json.decoder.JSONDecodeError:
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": -32700, "message": "Parse error"},
-            }
-        )
+        return {
+            "jsonrpc": "2.0",
+            "id": None,
+            "error": {"code": -32700, "message": "Parse error"},
+        }
     request_id = body.get("id")
     version = body.get("jsonrpc")
     if version != "2.0":
         error_text = "JSONRPC protocol version MUST be exactly '2.0'"
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "error": {
-                    "code": -32600,
-                    "message": "Invalid Request",
-                    "data": {"text": error_text},
-                },
-            }
-        )
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32600,
+                "message": "Invalid Request",
+                "data": {"text": error_text},
+            },
+        }
     api_name = body.get("method")
     if not api_name:
         error_text = (
             "Method field MUST containing the name of the method to be invoked"
         )
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "error": {
-                    "code": -32600,
-                    "message": "Invalid Request",
-                    "data": {"text": error_text},
-                },
-            }
-        )
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32600,
+                "message": "Invalid Request",
+                "data": {"text": error_text},
+            },
+        }
     if api_name not in api_methods:
         try:
             # example: api.echo.method
             # file: api/echo/method.py
             import_module("{}.{}.{}".format(JR_API_DIR, api_name, JR_API_FILE))
         except ModuleNotFoundError:
-            return JsonResponse(
-                {
-                    "jsonrpc": "2.0",
-                    "id": request_id,
-                    "error": {"code": -32601, "message": "Method not found"},
-                }
-            )
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32601, "message": "Method not found"},
+            }
         except Exception:
             jsonrpc_response = {"jsonrpc": "2.0", "id": request_id}
             error = {"code": -1, "message": "Internal error"}
@@ -100,27 +101,21 @@ def api_dispatch(request):
                 error["data"] = {"stack": stack, "executable": sys.executable}
             logging.error("{}".format(stack))
             jsonrpc_response.update({"error": error})
-            return JsonResponse(jsonrpc_response)
+            return jsonrpc_response
     cls = api_methods.get(api_name)
     if not cls:
-        return JsonResponse(
-            {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "error": {"code": -32601, "message": "Method not found"},
-            }
-        )
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32601, "message": "Method not found"},
+        }
     params = body.get("params", {})  # TODO: support params as list (not {})
     jsonrpc_response = {"jsonrpc": "2.0", "id": request_id}
     try:
-        response = HttpResponse(content_type="application/json")
         instance = cls(request, response, params)
         if instance.result is not UNDEF:
             jsonrpc_response.update({"result": instance.result})
-            instance.response.content = json.dumps(
-                jsonrpc_response, cls=ResponseJsonEncoder
-            )
-            return instance.response
+            return jsonrpc_response
         else:
             jsonrpc_response.update(
                 {"error": {"code": -32603, "message": "Internal error"}}
@@ -132,7 +127,7 @@ def api_dispatch(request):
             error["data"] = {"stack": stack, "executable": sys.executable}
         logging.error("{}".format(stack))
         jsonrpc_response.update({"error": error})
-    return JsonResponse(jsonrpc_response)
+    return jsonrpc_response
 
 
 class MetaBase(type):
