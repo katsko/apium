@@ -32,7 +32,7 @@ class Field(BaseField):
     ):
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
-            raise TypeError("validators is not iterable")
+            raise TypeError('validators is not iterable')
         self.validators = validators if validators else []
         self.required = required
         self.nullable = nullable
@@ -46,9 +46,10 @@ class Field(BaseField):
         self.method_cache = obj.method_cache
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
-            self.value = (
-                self.default() if callable(self.default) else self.default
-            )
+            if callable(self.default):
+                self.value = self.default()
+            else:
+                self.value = self.default
         self._validate_first()
         self.value = self.format()
         self._validate_next()
@@ -58,9 +59,9 @@ class Field(BaseField):
 
     def _validate_first(self):
         if self.required and self.value == UNDEF:
-            raise ValueError("Field is required")
+            raise ValueError('Field is required')
         if not self.nullable and self.value is None:
-            raise ValueError("Expected not null")
+            raise ValueError('Expected not null')
 
     def _validate_next(self):
         if self.value not in [None, UNDEF]:
@@ -69,7 +70,7 @@ class Field(BaseField):
             self.validate()
 
     def validate(self):
-        """В классе-потомке провалидировать"""
+        """Override in class-child"""
         pass
 
 
@@ -83,7 +84,7 @@ class Int(Field):
     def validate(self):
         super(Int, self).validate()
         if not isinstance(self.value, int):
-            raise ValueError("Expected int")
+            raise ValueError('Expected int')
 
 
 class Float(Field):
@@ -96,7 +97,7 @@ class Float(Field):
     def validate(self):
         super(Float, self).validate()
         if not isinstance(self.value, float):
-            raise ValueError("Expected float")
+            raise ValueError('Expected float')
 
 
 class Str(Field):
@@ -121,7 +122,7 @@ class Str(Field):
         value = self.value
         if value not in [None, UNDEF]:
             if not isinstance(value, (str, int, float)):
-                raise TypeError("Expected str")
+                raise TypeError('Expected str')
             value = str(value)
             if self.strip:
                 value = value.strip()
@@ -131,15 +132,15 @@ class Str(Field):
 
     def validate(self):
         value = self.value
-        if not self.blank and value == "":
-            raise ValueError("Expected not blank")
+        if not self.blank and value == '':
+            raise ValueError('Expected not blank')
         value_len = len(value)
         min_lenght = self.min_lenght
         max_lenght = self.max_lenght
         if min_lenght is not None and value_len < min_lenght:
-            raise ValueError(f"Str min lenght must be {min_lenght}")
+            raise ValueError(f'Str min lenght must be {min_lenght}')
         if max_lenght is not None and value_len > max_lenght:
-            raise ValueError(f"Str max lenght must be {max_lenght}")
+            raise ValueError(f'Str max lenght must be {max_lenght}')
 
 
 class Dict(Field):
@@ -149,25 +150,25 @@ class Dict(Field):
 
     def validate(self):
         if not isinstance(self.value, dict):
-            raise TypeError("Expected dict (json)")
+            raise TypeError('Expected dict (json)')
         if not self.blank and self.value == {}:
-            raise ValueError("Expected not blank")
+            raise ValueError('Expected not blank')
 
 
 class Email(Str):
     def validate(self):
         super(Email, self).validate()
-        if "@" not in self.value:
-            raise ValueError("Expected email")
+        if '@' not in self.value:
+            raise ValueError('Expected email')
 
 
 class Date(Str):
     def format(self):
         self.value = super(Date, self).format()
         try:
-            return datetime.strptime(self.value, "%Y-%m-%d")
+            return datetime.strptime(self.value, '%Y-%m-%d')
         except Exception:
-            raise TypeError("Expected date %Y-%m-%d")
+            raise TypeError('Expected date %Y-%m-%d')
 
 
 class List(Field):
@@ -177,22 +178,20 @@ class List(Field):
 
     def validate(self):
         if not isinstance(self.value, list):
-            raise ValueError("Expected list")
+            raise ValueError('Expected list')
         if not self.blank and self.value == []:
-            raise ValueError("Expected not blank")
+            raise ValueError('Expected not blank')
 
 
 class MetaObjField(type):
     def __new__(self, name, bases, namespace):
         cls = super(MetaObjField, self).__new__(self, name, bases, namespace)
-        cls._fields = getattr(cls, "_fields", {})
-        cls._fields.update(
-            {
-                key: val.order
-                for key, val in namespace.items()
-                if isinstance(val, BaseField)
-            }
-        )
+        cls._fields = getattr(cls, '_fields', {})
+        cls._fields.update({
+            key: val.order
+            for key, val in namespace.items()
+            if isinstance(val, BaseField)
+        })
         cls._fields = OrderedDict(
             sorted(cls._fields.items(), key=lambda item: item[1])
         )
@@ -210,10 +209,10 @@ class Obj(BaseField, metaclass=MetaObjField):
         order=ORDER_DEFAULT,
         fields=None,
     ):
-        print("class objfield init")
+        print('class objfield init')
         self.value = UNDEF
         if validators is not None and not isinstance(validators, list):
-            raise TypeError("validators is not iterable")
+            raise TypeError('validators is not iterable')
         self.validators = validators if validators else []
         self.required = required
         self.nullable = nullable
@@ -235,23 +234,24 @@ class Obj(BaseField, metaclass=MetaObjField):
         self.method_cache = obj.method_cache
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
-            self.value = (
-                self.default() if callable(self.default) else self.default
-            )
+            if callable(self.default):
+                self.value = self.default()
+            else:
+                self.value = self.default
         self._validate_first()
         self.value = self.format()
 
-        print("O F {}".format(self._fields))
+        print('O F {}'.format(self._fields))
         obj_value = {} if self.value == UNDEF else self.value
         for key in self._fields:
             try:
-                print("OBJF - {} : {}".format(key, obj_value.get(key, UNDEF)))
+                print('OBJF - {} : {}'.format(key, obj_value.get(key, UNDEF)))
                 setattr(self, key, obj_value.get(key, UNDEF))
-                validator = getattr(self, "validate_{}".format(key), None)
+                validator = getattr(self, 'validate_{}'.format(key), None)
                 if validator:
                     validator(getattr(self, key))
             except Exception as exc:
-                raise ValueError("{}: {}".format(key, exc))
+                raise ValueError('{}: {}'.format(key, exc))
 
         self._validate_next()
 
@@ -260,9 +260,9 @@ class Obj(BaseField, metaclass=MetaObjField):
 
     def _validate_first(self):
         if self.required and self.value == UNDEF:
-            raise ValueError("Field is required")
+            raise ValueError('Field is required')
         if not self.nullable and self.value is None:
-            raise ValueError("Expected not None")
+            raise ValueError('Expected not None')
         if self.value == UNDEF:
             self.value = {}
 
@@ -275,6 +275,6 @@ class Obj(BaseField, metaclass=MetaObjField):
     def validate(self):
         # TODO: check is dict before set subfields
         if not isinstance(self.value, dict):
-            raise TypeError("Expected dict (json)")
+            raise TypeError('Expected dict (json)')
         if not self.blank and self.value == {}:
-            raise ValueError("Expected not blank")
+            raise ValueError('Expected not blank')

@@ -19,8 +19,8 @@ try:
     from api.api_settings import DEBUG, JR_API_DIR, JR_API_FILE
 except ImportError:
     DEBUG = False
-    JR_API_DIR = "api"
-    JR_API_FILE = "method"
+    JR_API_DIR = 'api'
+    JR_API_FILE = 'method'
 
 # TODO: remove from global namespace after testing ordered middleware
 # middles_is_mapped_to_fields = []
@@ -40,7 +40,7 @@ class ResponseJsonEncoder(json.JSONEncoder):
 
 @csrf_exempt
 def api_handler(request):
-    response = HttpResponse(content_type="application/json")
+    response = HttpResponse(content_type='application/json')
     jsonrpc_response = api_dispatch(request, response, request.body)
     response.content = json.dumps(jsonrpc_response, cls=ResponseJsonEncoder)
     return response
@@ -51,82 +51,116 @@ def api_dispatch(request, response, body):
         body = json.loads(body)
     except json.decoder.JSONDecodeError:
         return {
-            "jsonrpc": "2.0",
-            "id": None,
-            "error": {"code": -32700, "message": "Parse error"},
-        }
-    request_id = body.get("id")
-    version = body.get("jsonrpc")
-    if version != "2.0":
-        error_text = "JSONRPC protocol version MUST be exactly '2.0'"
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32600,
-                "message": "Invalid Request",
-                "data": {"text": error_text},
+            'jsonrpc': '2.0',
+            'id': None,
+            'error': {
+                'code': -32700,
+                'message': 'Parse error',
             },
         }
-    api_name = body.get("method")
+    request_id = body.get('id')
+    version = body.get('jsonrpc')
+    if version != '2.0':
+        error_text = 'JSONRPC protocol version MUST be exactly "2.0"'
+        return {
+            'jsonrpc': '2.0',
+            'id': request_id,
+            'error': {
+                'code': -32600,
+                'message': 'Invalid Request',
+                'data': {
+                    'text': error_text,
+                },
+            },
+        }
+    api_name = body.get('method')
     if not api_name:
         error_text = (
-            "Method field MUST containing the name of the method to be invoked"
+            'Method field MUST containing the name of the method to be invoked'
         )
         return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32600,
-                "message": "Invalid Request",
-                "data": {"text": error_text},
+            'jsonrpc': '2.0',
+            'id': request_id,
+            'error': {
+                'code': -32600,
+                'message': 'Invalid Request',
+                'data': {
+                    'text': error_text,
+                },
             },
         }
     if api_name not in api_methods:
         try:
             # example: api.echo.method
             # file: api/echo/method.py
-            import_module("{}.{}.{}".format(JR_API_DIR, api_name, JR_API_FILE))
+            import_module('{}.{}.{}'.format(JR_API_DIR, api_name, JR_API_FILE))
         except ModuleNotFoundError:
             return {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "error": {"code": -32601, "message": "Method not found"},
+                'jsonrpc': '2.0',
+                'id': request_id,
+                'error': {
+                    'code': -32601,
+                    'message': 'Method not found',
+                },
             }
         except Exception:
-            jsonrpc_response = {"jsonrpc": "2.0", "id": request_id}
-            error = {"code": -1, "message": "Internal error"}
+            jsonrpc_response = {
+                'jsonrpc': '2.0',
+                'id': request_id,
+            }
+            error = {
+                'code': -1,
+                'message': 'Internal error',
+            }
             stack = traceback.format_exc()
             if DEBUG:
-                error["data"] = {"stack": stack, "executable": sys.executable}
-            logging.error("{}".format(stack))
-            jsonrpc_response.update({"error": error})
+                error['data'] = {
+                    'stack': stack,
+                    'executable': sys.executable,
+                }
+            logging.error('{}'.format(stack))
+            jsonrpc_response.update({'error': error})
             return jsonrpc_response
     cls = api_methods.get(api_name)
     if not cls:
         return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {"code": -32601, "message": "Method not found"},
+            'jsonrpc': '2.0',
+            'id': request_id,
+            'error': {
+                'code': -32601,
+                'message': 'Method not found',
+            },
         }
-    params = body.get("params", {})  # TODO: support params as list (not {})
-    jsonrpc_response = {"jsonrpc": "2.0", "id": request_id}
+    params = body.get('params', {})  # TODO: support params as list (not {})
+    jsonrpc_response = {
+        'jsonrpc': '2.0',
+        'id': request_id,
+    }
     try:
         instance = cls(request, response, params)
         if instance.result is not UNDEF:
-            jsonrpc_response.update({"result": instance.result})
+            jsonrpc_response.update({'result': instance.result})
             return jsonrpc_response
         else:
-            jsonrpc_response.update(
-                {"error": {"code": -32603, "message": "Internal error"}}
-            )
+            jsonrpc_response.update({
+                'error': {
+                    'code': -32603,
+                    'message': 'Internal error',
+                }
+            })
     except Exception as exc:
-        error = {"code": -1, "message": str(exc)}
+        error = {
+            'code': -1,
+            'message': str(exc),
+        }
         stack = traceback.format_exc()
         if DEBUG:
-            error["data"] = {"stack": stack, "executable": sys.executable}
-        logging.error("{}".format(stack))
-        jsonrpc_response.update({"error": error})
+            error['data'] = {
+                'stack': stack,
+                'executable': sys.executable,
+            }
+        logging.error('{}'.format(stack))
+        jsonrpc_response.update({'error': error})
     return jsonrpc_response
 
 
@@ -136,17 +170,17 @@ class MetaBase(type):
         cls_mro = cls.mro()
         if len(cls_mro) > 2:  # 1 - UserCustomMethod, 2 - Method, 3 - object
             api_name = cls.__name__
-            api_name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", api_name)
-            api_name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", api_name).lower()
+            api_name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', api_name)
+            api_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', api_name).lower()
             api_methods[api_name] = cls
         cls._fields = {
             key: val.order
             for key, val in namespace.items()
             if isinstance(val, BaseField)
         }
-        # form inheritance
+        # for inheritance
         for item in cls_mro[1:-1]:  # exclude UserCustomMethod and object
-            if hasattr(item, "_fields"):
+            if hasattr(item, '_fields'):
                 cls._fields.update(item._fields)
         cls._fields = OrderedDict(
             sorted(cls._fields.items(), key=lambda item: item[1])
@@ -158,20 +192,20 @@ class Method(metaclass=MetaBase):
     method_cache = {}
 
     def __init__(self, request, response, data, *args, **kwargs):
-        print("class method init")
+        print('class method init')
         self.request = request
         self.response = response
         self.result = UNDEF
         self.method_cache = {}
-        print("M F {}".format(self._fields))
+        print('M F {}'.format(self._fields))
         fields = list(self._fields.items())
         middles_is_mapped_to_fields = set()
         # run @order_first middlewares
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
-                self, "_{}__middle".format(item.__name__), None
+                self, '_{}__middle'.format(item.__name__), None
             )
-            orig_qualname = "{}.__middle".format(item.__name__)
+            orig_qualname = '{}.__middle'.format(item.__name__)
             if (
                 middle_method
                 and middle_method not in middles_is_mapped_to_fields
@@ -182,13 +216,13 @@ class Method(metaclass=MetaBase):
             middle_methods_mro = {}
             for item in type(self).mro()[:-1]:
                 middle_method = getattr(
-                    self, "_{}__middle".format(item.__name__), None
+                    self, '_{}__middle'.format(item.__name__), None
                 )
                 if middle_method:
-                    orig_qualname = "{}.__middle".format(item.__name__)
+                    orig_qualname = '{}.__middle'.format(item.__name__)
                     middle_methods_mro[orig_qualname] = middle_method
             prev_field = fields[0]
-            print("middle_order", middle_order)
+            print('middle_order', middle_order)
             # run middlewares if order of middle less then order of first field
             for orig_qualname, method in middle_methods_mro.items():
                 order = middle_order.get(orig_qualname)
@@ -206,25 +240,25 @@ class Method(metaclass=MetaBase):
                 prev_field = item_field
         for key in self._fields:
             try:
-                print("METHOD - {} : {}".format(key, data.get(key)))
+                print('METHOD - {} : {}'.format(key, data.get(key)))
                 setattr(self, key, data.get(key, UNDEF))
                 # for ext validate (run validate_<field>)
-                validator = getattr(self, "validate_{}".format(key), None)
+                validator = getattr(self, 'validate_{}'.format(key), None)
                 if validator:
                     validator(getattr(self, key))
                 for middle_method in fields_middles_map[key]:
                     # middle_method(self)
                     middle_method()
             except Exception as exc:
-                raise ValueError("{}: {}".format(key, exc))
+                raise ValueError('{}: {}'.format(key, exc))
         self.validate()
         # for middleware (run __middle method)
         # run middleware if middleware not ordered by decorator
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
-                self, "_{}__middle".format(item.__name__), None
+                self, '_{}__middle'.format(item.__name__), None
             )
-            orig_qualname = "{}.__middle".format(item.__name__)
+            orig_qualname = '{}.__middle'.format(item.__name__)
             if (
                 middle_method
                 and middle_method not in middles_is_mapped_to_fields
@@ -235,9 +269,9 @@ class Method(metaclass=MetaBase):
         # run @order_last middlewares
         for item in type(self).mro()[:-1]:
             middle_method = getattr(
-                self, "_{}__middle".format(item.__name__), None
+                self, '_{}__middle'.format(item.__name__), None
             )
-            orig_qualname = "{}.__middle".format(item.__name__)
+            orig_qualname = '{}.__middle'.format(item.__name__)
             if (
                 middle_method
                 and middle_method not in middles_is_mapped_to_fields
@@ -248,7 +282,7 @@ class Method(metaclass=MetaBase):
         # for middleware after execute (run __after method)
         for item in type(self).mro()[:-1]:
             after_method = getattr(
-                self, "_{}__after".format(item.__name__), None
+                self, '_{}__after'.format(item.__name__), None
             )
             if after_method:
                 after_method()
