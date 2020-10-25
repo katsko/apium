@@ -5,8 +5,6 @@ import sys
 from collections import OrderedDict, defaultdict
 from importlib import import_module
 import traceback
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from .fields import UNDEF, BaseField
 
 api_methods = {}
@@ -36,14 +34,6 @@ class ResponseJsonEncoder(json.JSONEncoder):
         if obj == UNDEF:
             return None
         return super(ResponseJsonEncoder, self).default(obj)
-
-
-@csrf_exempt
-def api_handler(request):
-    response = HttpResponse(content_type='application/json')
-    jsonrpc_response = api_dispatch(request, response, request.body)
-    response.content = json.dumps(jsonrpc_response, cls=ResponseJsonEncoder)
-    return response
 
 
 def api_dispatch(request, response, body):
