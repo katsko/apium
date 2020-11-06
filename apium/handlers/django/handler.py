@@ -1,7 +1,7 @@
 import json
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from jrlib import api_dispatch, ResponseJsonEncoder
+from apium import api_dispatch, ResponseJsonEncoder
 
 
 @csrf_exempt

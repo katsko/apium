@@ -1,6 +1,6 @@
 import json
 from flask import make_response, request
-from jrlib import api_dispatch, ResponseJsonEncoder
+from apium import api_dispatch, ResponseJsonEncoder
 
 
 def api_handler():

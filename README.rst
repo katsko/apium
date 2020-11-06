@@ -1,5 +1,5 @@
-======
-README
-======
+=====
+Apium
+=====
 
-Experiments with prototype jsonrpc library
+Python JSON-RPC Framework
