@@ -7,3 +7,5 @@ from .base import (
     order_last,
 )
 from . import fields as af
+
+__version__ = '0.1'
