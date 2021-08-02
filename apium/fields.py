@@ -11,7 +11,17 @@ class Undefined:
     """
 
     # TODO: add __slots__ to lite class
-    pass
+
+    def __bool__(self):
+        """
+        For use in operator if:
+
+        UNDEF = Undefined()
+        my_field = UNDEF
+        if my_field:  # if bool(my_field)
+            print('not print')
+        """
+        return False
 
 
 UNDEF = Undefined()
