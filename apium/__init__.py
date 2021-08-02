@@ -8,4 +8,4 @@ from .base import (
 )
 from . import fields as af
 
-__version__ = '0.1'
+__version__ = '0.1.1'
