@@ -10,7 +10,7 @@ class Undefined:
     This field is not None, exactly does not exist.
     """
 
-    # TODO: add __slots__ to lite class
+    __slots__ = ()  # empty __slots__ to lite class
 
     def __bool__(self):
         """
