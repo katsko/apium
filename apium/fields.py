@@ -110,6 +110,13 @@ class Float(Field):
             raise ValueError('Expected float')
 
 
+class Bool(Field):
+    def validate(self):
+        super(Bool, self).validate()
+        if not isinstance(self.value, bool):
+            raise ValueError('Expected bool')
+
+
 class Str(Field):
     def __init__(
         self,
