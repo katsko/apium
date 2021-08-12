@@ -84,16 +84,7 @@ def api_dispatch(request, response, body):
             # example: api.echo.method
             # file: api/echo/method.py
             import_module('{}.{}.{}'.format(JR_API_DIR, api_name, JR_API_FILE))
-        except ModuleNotFoundError:
-            return {
-                'jsonrpc': '2.0',
-                'id': request_id,
-                'error': {
-                    'code': -32601,
-                    'message': 'Method not found',
-                },
-            }
-        except Exception:
+        except Exception as exc:
             jsonrpc_response = {
                 'jsonrpc': '2.0',
                 'id': request_id,
@@ -102,6 +93,11 @@ def api_dispatch(request, response, body):
                 'code': -1,
                 'message': 'Internal error',
             }
+            if isinstance(exc, ModuleNotFoundError):
+                error = {
+                    'code': -32601,
+                    'message': 'Method not found',
+                }
             stack = traceback.format_exc()
             if DEBUG:
                 error['data'] = {
