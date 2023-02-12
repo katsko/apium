@@ -1,5 +1,6 @@
 from .base import (
     api_dispatch,
+    ErrorResult,
     ResponseJsonEncoder,
     Method,
     order,

@@ -36,6 +36,12 @@ class ResponseJsonEncoder(json.JSONEncoder):
         return super(ResponseJsonEncoder, self).default(obj)
 
 
+class ErrorResult(Exception):
+    def __init__(self, payload='fail'):
+        self.payload = payload
+        super().__init__(self.payload)
+
+
 def api_dispatch(request, response, body):
     try:
         body = json.loads(body)
@@ -134,6 +140,8 @@ def api_dispatch(request, response, body):
                     'message': 'Internal error',
                 }
             })
+    except ErrorResult as exc:
+        jsonrpc_response.update({'result': exc.payload})
     except Exception as exc:
         error = {
             'code': -1,
@@ -235,6 +243,8 @@ class Method(metaclass=MetaBase):
                 for middle_method in fields_middles_map[key]:
                     # middle_method(self)
                     middle_method()
+            except ErrorResult as exc:
+                raise exc
             except Exception as exc:
                 raise ValueError('{}: {}'.format(key, exc))
         self.validate()
