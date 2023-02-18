@@ -53,7 +53,7 @@ class Field(BaseField):
         return self.value
 
     def __set__(self, obj, value):
-        self.method_cache = obj.method_cache
+        self.method = obj
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             if callable(self.default):
@@ -248,7 +248,7 @@ class Obj(BaseField, metaclass=MetaObjField):
             )
 
     def __set__(self, obj, value):
-        self.method_cache = obj.method_cache
+        self.method = obj
         self.value = value
         if self.value == UNDEF and self.default != UNDEF:
             if callable(self.default):
