@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from datetime import datetime
+from datetime import date, datetime
 
 ORDER_DEFAULT = 1000000
 
@@ -181,11 +181,15 @@ class Email(Str):
 
 class Date(Str):
     def format(self):
-        self.value = super(Date, self).format()
+        value = super().format()
         try:
-            return datetime.strptime(self.value, '%Y-%m-%d')
-        except Exception:
-            raise TypeError('Expected date %Y-%m-%d')
+            return datetime.strptime(value, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return value
+
+    def validate(self):
+        if not isinstance(self.value, date):
+            raise ValueError('Expected date %Y-%m-%d')
 
 
 class List(Field):
