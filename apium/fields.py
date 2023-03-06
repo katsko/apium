@@ -27,6 +27,10 @@ class Undefined:
 UNDEF = Undefined()
 
 
+class RequiredError(Exception):
+    pass
+
+
 class BaseField:
     pass
 
@@ -69,7 +73,7 @@ class Field(BaseField):
 
     def _validate_first(self):
         if self.required and self.value == UNDEF:
-            raise ValueError('Field is required')
+            raise RequiredError('Field is required')
         if not self.nullable and self.value is None:
             raise ValueError('Expected not null')
 
@@ -267,7 +271,11 @@ class Obj(BaseField, metaclass=MetaObjField):
         for key in self._fields:
             try:
                 print('OBJF - {} : {}'.format(key, obj_value.get(key, UNDEF)))
-                setattr(self, key, obj_value.get(key, UNDEF))
+                try:
+                    setattr(self, key, obj_value.get(key, UNDEF))
+                except RequiredError as exc:
+                    if self.required or obj_value:
+                        raise exc
                 validator = getattr(self, 'validate_{}'.format(key), None)
                 if validator:
                     validator(getattr(self, key))
@@ -276,12 +284,16 @@ class Obj(BaseField, metaclass=MetaObjField):
 
         self._validate_next()
 
+    def __bool__(self):
+        return bool(self.value)
+
     def format(self):
         return self.value
 
     def _validate_first(self):
         if self.required and self.value == UNDEF:
-            raise ValueError('Field is required')
+            # raise ValueError('Field is required')
+            raise RequiredError('Field is required')
         if not self.nullable and self.value is None:
             raise ValueError('Expected not None')
         if self.value == UNDEF:
